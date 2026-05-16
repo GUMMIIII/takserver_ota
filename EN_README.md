@@ -1,258 +1,260 @@
-# InfZ-Model OTA Bundle Generator for civTAK
+# TAKOTA – civTAK OTA Bundle Generator (English)
 
-This repository provides a Python script and step-by-step instructions to generate an **InfZ-format** OTA update bundle from ATAK plugin APKs. The resulting files can be directly deployed to a civTAK server under `/opt/tak/webcontent/update`.
+Generate `product.inf` and `product.infz` from ATAK plugin APKs and deploy them to your civTAK server so clients receive automatic over-the-air (OTA) plugin updates.
 
-## Contents
-
-* `generate_inf_repo.py` – Python script to create `product.inf` (CSV) and `product.infz` (ZIP of CSV + icons), and extract icons from APKs
-* **README.md** – this guide in English
+> Last tested: May 2026 · TAKServer 5.x · ATAK 5.x
 
 ---
 
-## Prerequisites
+## Table of Contents
 
-* A **Windows** or **Linux** (x86\_64) machine with Administrator/Root access
-* **Python 3** installed (`python3` on Linux, Windows installer with "Add Python to PATH")
-* **Java JDK 11+** (Adoptium Temurin) with `JAVA_HOME` environment variable set
-* **Android SDK Command-Line Tools** + **Build-Tools 33.0.2** (`aapt` utility)
-* A working civTAK server serving `/opt/tak/webcontent/update`
+1. [Overview](#1-overview)
+2. [Prerequisites](#2-prerequisites)
+3. [Installation & Setup](#3-installation--setup)
+   - [Windows](#option-a-windows)
+   - [Linux](#option-b-linux)
+   - [Optional: Build a standalone .exe](#optional-build-a-standalone-exe-windows)
+4. [Using the GUI](#4-using-the-gui)
+5. [What gets generated](#5-what-gets-generated)
+6. [Upload to your civTAK Server](#6-upload-to-your-civtak-server)
+7. [Configure ATAK Clients](#7-configure-atak-clients)
+8. [Troubleshooting](#8-troubleshooting)
 
 ---
 
-## 1. Install Android Build Tools (`aapt`)
+## 1. Overview
+
+TAKOTA is a graphical tool that:
+
+- Scans a folder of ATAK plugin `.apk` files
+- Extracts metadata (package name, version, icon, description) using the Android `aapt` tool
+- Writes a `product.inf` manifest (CSV format) and bundles it with the extracted icons into `product.infz` (ZIP archive)
+- The resulting files are placed directly on your civTAK server so ATAK clients can discover and install plugins automatically
+
+---
+
+## 2. Prerequisites
+
+| Requirement | Details |
+|-------------|---------|
+| **Python 3.10+** | [python.org](https://www.python.org/downloads/) — enable "Add Python to PATH" on Windows |
+| **aapt** | Android Asset Packaging Tool. Included in Android SDK build-tools. The setup scripts attempt to install this automatically. |
+| **civTAK Server** | Running TAKServer with `/opt/tak/webcontent/update/` accessible |
+| **Plugin APKs** | Download your plugins from [tak.gov](https://tak.gov) |
+
+> **tkinter** (GUI library) ships with standard Python on Windows. On Linux it may need a separate package (`python3-tk`). The `setup.sh` script handles this automatically.
+
+---
+
+## 3. Installation & Setup
 
 ### Option A: Windows
 
-1. Download **Command-line Tools (Windows ZIP)** from:
-   [https://developer.android.com/studio#command-tools](https://developer.android.com/studio#command-tools)
-2. Unzip to `C:\Android\cmdline-tools\latest\`
-3. Open **cmd.exe** and run:
+1. Download or clone this repository.
+2. Open **PowerShell** in the repository folder.
+3. Run the setup script:
 
-   ```bat
-   cd C:\Android\cmdline-tools\latest\bin
-   sdkmanager.bat "build-tools;33.0.2"
-   ```
-4. Verify `aapt.exe` is present:
+```powershell
+.\install_windows.ps1
+```
 
-   ```text
-   C:\Android\build-tools\33.0.2\aapt.exe
-   ```
+The script will:
+- Check for **Python 3** — install via `winget` if missing
+- Search for **aapt** in PATH, `ANDROID_HOME`, and common SDK locations
+- Attempt to install aapt via `sdkmanager` or `winget` if not found
+- Launch the TAKOTA GUI
 
-### Option B: Linux (Debian/Ubuntu)
+> If the script is blocked by execution policy, run:
+> ```powershell
+> Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+> ```
+
+**Manual aapt install (if auto-install fails):**
+
+Download the Android Command Line Tools from [developer.android.com](https://developer.android.com/studio#command-tools), extract to `C:\Android\cmdline-tools\latest`, then run:
+```cmd
+cd C:\Android\cmdline-tools\latest\bin
+sdkmanager.bat "build-tools;33.0.2"
+```
+`aapt.exe` will be at `C:\Android\build-tools\33.0.2\aapt.exe`.
+
+---
+
+### Option B: Linux
+
+1. Download or clone this repository.
+2. Open a terminal in the repository folder.
+3. Run the setup script:
 
 ```bash
-sudo apt update
-dpkg --add-architecture i386            # if needed for 32-bit libs
-sudo apt install aapt                   # older aapt versions
-# Or use Android SDK:
-export ANDROID_SDK_ROOT="$HOME/Android/Sdk"
-export PATH="$ANDROID_SDK_ROOT/build-tools/33.0.2:$PATH"
+bash setup.sh
+```
+
+The script will:
+- Check for **Python 3** — install if missing
+- Check for **tkinter** (`python3-tk`) — install if missing
+- Search for **aapt** in PATH, `ANDROID_HOME`, and common SDK locations
+- Install aapt automatically via `apt-get` / `dnf` / `pacman` / `zypper`
+- Launch the TAKOTA GUI
+
+**Headless / server mode** (no display available):
+
+```bash
+TAKOTA_APK_DIR=/opt/tak/webcontent/update bash setup.sh --headless
+```
+
+**Manual aapt install (Ubuntu/Debian):**
+```bash
+sudo apt-get install aapt
+```
+
+**Manual aapt install (Fedora):**
+```bash
+sudo dnf install android-tools
 ```
 
 ---
 
-## 2. Prepare Project Folder
+### Optional: Build a standalone .exe (Windows)
 
-On your local machine (or Linux server):
+If you want to distribute TAKOTA as a single executable that requires no Python installation on the target machine:
 
-```bash
-mkdir -p C:/ATAK/update       # Windows
-# or on Linux:
-# mkdir -p ~/ATAK/update
-cd C:/ATAK/update
+```batch
+build_exe.bat
 ```
 
-Copy **all** plugin `.apk` files from tak.gov into this directory.
+This installs **PyInstaller** and builds `dist\TAKOTA.exe`. Copy the `.exe` to any Windows machine — Python is not required. Note that `aapt.exe` must still be present on the target system.
 
 ---
 
-## 3. Python Script: `generate_inf_repo.py`
+## 4. Using the GUI
 
-Create file `generate_inf_repo.py` in the update folder with this content:
+After launching (`python takota_gui.py`, `setup.sh`, or `install_windows.ps1`):
 
-```python
-import os, subprocess, zipfile, hashlib
+![TAKOTA GUI layout]
 
-# —— Configuration ——
-AAPT = r"C:/Android/build-tools/33.0.2/aapt.exe"  # Adjust path if needed
-UPDATE_DIR = os.path.dirname(os.path.abspath(__file__))
+### Step-by-step
 
-# Compute SHA256 digest
-def sha256sum(path):
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            h.update(chunk)
-    return h.hexdigest()
+**1. APK Folder**
+Click **Browse…** next to "APK Folder" and select the directory containing your plugin `.apk` files.
+All `.apk` files in that folder will be processed.
 
-# Verify prerequisites
-if not os.path.isfile(AAPT):
-    raise FileNotFoundError(f"aapt tool not found at: {AAPT}")
-if not os.path.isdir(UPDATE_DIR):
-    raise NotADirectoryError(f"Update directory not found: {UPDATE_DIR}")
+**2. aapt Path**
+The tool searches for `aapt` automatically on startup. If found, the path is filled in.
+- If not found, click **Auto-Detect** to trigger another search + install attempt.
+- Or click **Browse…** to select `aapt` / `aapt.exe` manually.
 
-os.chdir(UPDATE_DIR)
+**3. Run**
+Click **▶ Run**. The log area shows progress for each APK:
+- Metadata extracted (package name, version, SDK requirements)
+- Icon extracted and saved as `.png`
+- SHA-256 hash calculated
+- Entry written to `product.inf`
 
-# Write CSV header
-HEADER = (
-    "#platform (Android Windows or iOS), type (app or plugin), "
-    "full package name, display/label, version, revision code (integer), "
-    "relative path to APK file, relative path to icon file, description, "
-    "apk hash, os requirement, tak prereq (e.g. plugin-api), apk size"
-)
-with open("product.inf", "w", encoding="utf-8") as outfile:
-    outfile.write(HEADER + "\n")
+When finished, `product.inf` and `product.infz` appear in the APK folder.
 
-# Process each APK
-for apk in sorted(f for f in os.listdir() if f.lower().endswith(".apk")):
-    print(f"Processing {apk}...")
-    # Extract metadata
-    lines = subprocess.run(
-        [AAPT, "dump", "badging", apk],
-        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-    ).stdout.decode("utf-8", errors="ignore").splitlines()
-
-    pkg = ver_name = ver_code = sdk_min = label = desc = prereq = ""
-    icon_path = ""
-    for line in lines:
-        if line.startswith("package:"):
-            parts = line.split()
-            for p in parts:
-                if p.startswith("name="):
-                    pkg = p.split("'")[1]
-                if p.startswith("versionCode="):
-                    ver_code = p.split("'")[1]
-                if p.startswith("versionName="):
-                    ver_name = p.split("'")[1]
-        if line.startswith("sdkVersion:"):
-            sdk_min = line.split("'")[1]
-        if "application-label:" in line:
-            label = line.split("'")[1]
-        if "app_desc" in line:
-            desc = line.split("'")[1].replace(",", ".")
-        if "plugin-api" in line:
-            prereq = line.split("'")[1]
-        if "application-icon-160" in line:
-            icon_path = line.split("application-icon-160:")[1].strip().strip("'")
-
-    if not label:
-        label = os.path.splitext(apk)[0]
-    if not desc:
-        desc = f"No description for {label}"
-
-    # Extract icon if available
-    png = os.path.splitext(apk)[0] + ".png"
-    if icon_path:
-        try:
-            with zipfile.ZipFile(apk, 'r') as z:
-                z.extract(icon_path, UPDATE_DIR)
-            orig = os.path.join(UPDATE_DIR, icon_path)
-            os.replace(orig, os.path.join(UPDATE_DIR, png))
-            # Cleanup empty dirs
-            d = os.path.dirname(orig)
-            if os.path.isdir(d):
-                os.removedirs(d)
-            print(f"  Icon: {png}")
-        except KeyError:
-            print("  ! Icon not found in APK")
-    else:
-        print("  - No icon")
-
-    # Compute hash and size
-    sha = sha256sum(apk)
-    size = os.path.getsize(apk)
-
-    # Append CSV line
-    line = (
-        f"Android,plugin,{pkg},{label},{ver_name},{ver_code},"
-        f"{apk},{png},{desc},{sha},{sdk_min},{prereq},{size}"
-    )
-    with open("product.inf", "a", encoding="utf-8") as f:
-        f.write(line + "\n")
-
-# Bundle CSV + PNGs into product.infz
-with zipfile.ZipFile("product.infz", "w", zipfile.ZIP_DEFLATED) as z:
-    z.write("product.inf", arcname="product.inf")
-    for png in sorted(f for f in os.listdir() if f.lower().endswith(".png")):
-        z.write(png, arcname=png)
-
-print("✅ Created product.inf and product.infz successfully.")
-```
+**4. Open Folder**
+Click **Open Folder** to open the output directory in your file manager.
 
 ---
 
-## 4. Run the Script
+## 5. What gets generated
 
-```bash
-cd C:/ATAK/update    # Windows path
-the python command may be `python` or `python3`
-python generate_inf_repo.py
-```
-
-On Linux:
-
-```bash
-cd /opt/tak/webcontent/update
-python3 generate_inf_repo.py
-```
-
-After execution, the folder will contain:
+After a successful run, your APK folder contains:
 
 ```
-product.inf       # CSV metadata
-product.infz      # ZIP archive of CSV + icons
-*.apk             # plugin APKs
-*.png             # extracted icons
+product.inf       ← CSV manifest (one line per plugin)
+product.infz      ← ZIP archive: product.inf + all extracted icons (.png)
+*.apk             ← your plugin APKs (unchanged)
+*.png             ← extracted plugin icons
 ```
+
+### product.inf format
+
+```
+#platform, type, package name, label, version, revision code,
+ apk path, icon path, description, sha256, min sdk, tak prereq, size
+Android,plugin,com.example.plugin,My Plugin,1.2.3,42,
+ my_plugin.apk,my_plugin.png,Short description,...,21,,123456
+```
+
+The TAKServer reads `product.infz` to build the plugin catalogue that ATAK clients download.
 
 ---
 
-## 5. Upload to civTAK Server
+## 6. Upload to your civTAK Server
 
-Use **WinSCP** (or `scp` on Linux) to upload the entire contents of the update folder to the server:
+Copy the entire contents of your APK folder to the TAKServer update directory.
 
-```bash
-scp C:/ATAK/update/* tak@IP:/opt/tak/webcontent/update/
-# then on the server:
-sudo chown -R tak:tak /opt/tak/webcontent/update
-sudo chmod -R 755 /opt/tak/webcontent/update
-```
-
----
-
-## 6. Configure ATAK Client
-
-1. Open ATAK → **Settings** → **TAK Package Management**
-2. Tap the three dots → **Edit** → Enable **Update Server**
-3. Enter URL:
-
-   ```
-   https://IP:PORT/update
-   ```
-4. Tap 🔄 **Update**
-
-Your ATAK client will now fetch the `product.infz` (metadata + icons) and list plugins ready for install or update. 🎉
-
----
-
-## Additional Linux Usage
-
-The same script runs on any x86\_64 Linux with Python 3 and `aapt` available:
+### Using SCP (Linux/macOS/WSL)
 
 ```bash
-# install prerequisites on Ubuntu/Debian
-sudo apt update
-sudo apt install python3 python3-pip aapt
-
-cd /opt/tak/webcontent/update
-python3 generate_inf_repo.py
+scp /path/to/apk/folder/* tak@YOUR_SERVER_IP:/opt/tak/webcontent/update/
 ```
 
-Ensure correct file ownership and permissions:
+### Using WinSCP (Windows)
+
+Connect to your server via SFTP, navigate to `/opt/tak/webcontent/update/`, and upload all files from your APK folder.
+
+### Fix permissions on the server
+
+After uploading, SSH into your server and run:
 
 ```bash
 sudo chown -R tak:tak /opt/tak/webcontent/update
 sudo chmod -R 755 /opt/tak/webcontent/update
 ```
 
-Your civTAK OTA server works the same way under Linux or Windows.
+### Verify
+
+Open the following URL in a browser (replace with your server's address and port):
+
+```
+https://YOUR_SERVER_IP:YOUR_PORT/update/product.infz
+```
+
+You should receive a ZIP file download. If you get a 404, check file permissions and the TAKServer webcontent path.
+
+---
+
+## 7. Configure ATAK Clients
+
+Each ATAK client needs to be pointed at your server's update URL once. After that, plugin updates happen automatically.
+
+1. Open **ATAK** on the Android device.
+2. Tap the menu icon → **Settings**.
+3. Go to **TAK Package Management** (sometimes under "Tool Preferences" depending on ATAK version).
+4. Tap the **three-dot menu** (⋮) → **Edit**.
+5. Enable **Update Server**.
+6. Enter the URL:
+   ```
+   https://YOUR_SERVER_IP:YOUR_PORT/update
+   ```
+7. Tap **Update** (🔄).
+
+ATAK will download `product.infz`, parse the manifest, and display all available plugins. Users can then install or update plugins directly from within ATAK without side-loading.
+
+> **Port:** TAKServer typically uses port `8443` for HTTPS. Check your TAKServer configuration if unsure.
+
+> **Certificate:** ATAK must trust your TAKServer's certificate. Import your server's CA certificate into ATAK if you see SSL errors.
+
+---
+
+## 8. Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| `aapt not found` | Click **Auto-Detect** in the GUI, or install manually (see Section 3) |
+| `No APK files found` | Make sure the selected folder contains `.apk` files |
+| Icon missing for a plugin | Some APKs don't declare an `application-icon-160` — the plugin still works without an icon |
+| `product.infz` not served by TAKServer | Check file ownership (`chown -R tak:tak`) and permissions (`chmod -R 755`) |
+| ATAK shows SSL error | Import your TAKServer CA certificate into ATAK (Settings → Manage Server Connections) |
+| ATAK shows no plugins | Verify the update URL ends in `/update` (not `/update/product.infz`) |
+| PowerShell execution policy error | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
+| tkinter missing on Linux | Run `sudo apt-get install python3-tk` |
+
+---
+
+## Credits
+
+Built on top of the original [takserver_ota](https://github.com/GUMMIIII/takserver_ota) workflow.
