@@ -184,36 +184,37 @@ The TAKServer reads `product.infz` to build the plugin catalogue that ATAK clien
 
 ## 6. Upload to your civTAK Server
 
-Copy the entire contents of your APK folder to the TAKServer update directory.
+Copy the entire contents of your APK folder to the TAKServer update directory. The destination depends on which TAKServer setup you're running.
 
-### Using SCP (Linux/macOS/WSL)
+### Option A — Vanilla TAKServer (default install)
 
 ```bash
 scp /path/to/apk/folder/* tak@YOUR_SERVER_IP:/opt/tak/webcontent/update/
 ```
 
-### Using WinSCP (Windows)
+Or via WinSCP / SFTP: navigate to `/opt/tak/webcontent/update/` and upload all files.
 
-Connect to your server via SFTP, navigate to `/opt/tak/webcontent/update/`, and upload all files from your APK folder.
-
-### Fix permissions on the server
-
-After uploading, SSH into your server and run:
-
+**Fix permissions on the server:**
 ```bash
 sudo chown -R tak:tak /opt/tak/webcontent/update
 sudo chmod -R 755 /opt/tak/webcontent/update
 ```
 
-### Verify
+**Verify:** open `https://YOUR_SERVER_IP:YOUR_PORT/update/product.infz` in a browser — you should get a ZIP download.
 
-Open the following URL in a browser (replace with your server's address and port):
+### Option B — [TAKSERVER_MDM](https://github.com/GUMMIIII/TAKSERVER_MDM) (companion deployment)
 
+TAKSERVER_MDM bind-mounts `/opt/tak/` from a host directory, so the path on the host is different. The container path is unchanged.
+
+```bash
+scp /path/to/apk/folder/* root@YOUR_SERVER_IP:/opt/komms-data/tak/webcontent/update/
 ```
-https://YOUR_SERVER_IP:YOUR_PORT/update/product.infz
-```
 
-You should receive a ZIP file download. If you get a 404, check file permissions and the TAKServer webcontent path.
+**Permissions:** The TAKSERVER_MDM container runs as `root`, so no `chown` is needed — uploaded files are immediately readable by the TAKServer process.
+
+**Verify:** open `https://tak.YOUR_DOMAIN/update/product.infz` in a browser — you should get a ZIP download.
+
+> nginx in TAKSERVER_MDM bypasses Authelia for `/update/` by design (since v0.0.15), because ATAK clients have no SSO cookie session. The manifest + APKs are public artefacts; actual CoT access control still happens at the 8089 TLS input via per-user x509 client certificates.
 
 ---
 

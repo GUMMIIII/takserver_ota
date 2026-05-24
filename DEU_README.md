@@ -182,36 +182,37 @@ Der TAKServer liest `product.infz` ein, um daraus den Plugin-Katalog zu erstelle
 
 ## 6. Upload auf den civTAK-Server
 
-Den gesamten Inhalt des APK-Ordners in das Update-Verzeichnis des TAKServers kopieren.
+Den gesamten Inhalt des APK-Ordners in das Update-Verzeichnis des TAKServers kopieren. Welcher Pfad gilt hängt davon ab, welches Setup du fährst.
 
-### Per SCP (Linux/macOS/WSL)
+### Variante A — Standard-TAKServer (Vanilla-Install)
 
 ```bash
 scp /pfad/zum/apk/ordner/* tak@DEINE_SERVER_IP:/opt/tak/webcontent/update/
 ```
 
-### Per WinSCP (Windows)
+Oder per WinSCP / SFTP: nach `/opt/tak/webcontent/update/` navigieren und alle Dateien hochladen.
 
-Verbindung zum Server per SFTP herstellen, nach `/opt/tak/webcontent/update/` navigieren und alle Dateien aus dem APK-Ordner hochladen.
-
-### Berechtigungen auf dem Server setzen
-
-Nach dem Upload per SSH auf den Server verbinden und folgende Befehle ausführen:
-
+**Berechtigungen auf dem Server setzen:**
 ```bash
 sudo chown -R tak:tak /opt/tak/webcontent/update
 sudo chmod -R 755 /opt/tak/webcontent/update
 ```
 
-### Ergebnis prüfen
+**Prüfen:** URL `https://DEINE_SERVER_IP:DEIN_PORT/update/product.infz` im Browser aufrufen — eine ZIP-Datei sollte heruntergeladen werden.
 
-Folgende URL im Browser aufrufen (Server-Adresse und Port anpassen):
+### Variante B — [TAKSERVER_MDM](https://github.com/GUMMIIII/TAKSERVER_MDM) (Companion-Deployment)
 
+TAKSERVER_MDM mountet `/opt/tak/` aus einem Host-Verzeichnis (Bind-Mount), daher unterscheidet sich der Host-Pfad. Der Container-Pfad bleibt gleich.
+
+```bash
+scp /pfad/zum/apk/ordner/* root@DEINE_SERVER_IP:/opt/komms-data/tak/webcontent/update/
 ```
-https://DEINE_SERVER_IP:DEIN_PORT/update/product.infz
-```
 
-Eine ZIP-Datei sollte heruntergeladen werden. Erscheint stattdessen eine 404-Fehlermeldung, bitte Berechtigungen und den TAKServer-Webcontent-Pfad überprüfen.
+**Berechtigungen:** Der TAKSERVER_MDM-Container läuft als `root`, daher ist kein `chown` nötig — hochgeladene Dateien sind für den TAKServer-Prozess sofort lesbar.
+
+**Prüfen:** URL `https://tak.DEINE_DOMAIN/update/product.infz` im Browser aufrufen — eine ZIP-Datei sollte heruntergeladen werden.
+
+> nginx in TAKSERVER_MDM umgeht Authelia für den `/update/`-Pfad gezielt (seit v0.0.15), weil ATAK-Clients keine SSO-Cookie-Session haben. Das Manifest und die APKs sind per Design öffentliche Artefakte; die eigentliche Zugriffskontrolle auf CoT-Daten findet weiterhin am 8089-TLS-Input über pro-User-x509-Client-Zertifikate statt.
 
 ---
 

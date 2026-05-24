@@ -14,6 +14,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.1.1] – 2026-05-24
+
+### Documented
+
+- **TAKSERVER_MDM-specific deployment path** added to `README.md`, `EN_README.md`, and `DEU_README.md`. Section 6 ("Upload to your civTAK Server") now has two clearly separated variants:
+  - **Option A — Vanilla TAKServer:** unchanged, `/opt/tak/webcontent/update/` with `tak:tak` ownership.
+  - **Option B — [TAKSERVER_MDM](https://github.com/GUMMIIII/TAKSERVER_MDM):** host path is `/opt/komms-data/tak/webcontent/update/`, no `chown` needed (container runs as root), ATAK pulls from `https://tak.DOMAIN/update`. Calls out the v0.0.15 nginx `/update/` Authelia bypass so operators understand why this works without an SSO cookie.
+- README hub now shows a comparison table for both deployment variants and links straight into the TAKSERVER_MDM README section.
+
+### Notes
+
+Documentation-only — no code changes. Existing TAKOTA installs work the same as before.
+
+---
+
 ## [0.1.0] – 2026-05-24
 
 ### Added
