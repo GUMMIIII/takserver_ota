@@ -1,0 +1,60 @@
+name: Feature request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea? Great. A few things to keep in mind:
+
+        - This is a solo-maintained hobby project. Big requests may take a while
+          or get declined depending on free-time budget.
+        - "Would be cool if..." is fine, but the more specific you can be about
+          the actual use-case, the more likely it gets prioritized.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that's hard or impossible today?
+      placeholder: |
+        e.g. "I'd like TAKOTA to also generate a 32-bit ARM build manifest
+        alongside the 64-bit one, so older field devices can still receive
+        updates."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Rough idea of what you'd want. UI option, CLI flag, config setting, new behavior?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Workarounds you tried, or other approaches you thought about.
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope (rough guess)
+      options:
+        - Small (config option, doc fix, single function tweak)
+        - Medium (new GUI element, minor format change)
+        - Large (new manifest format, architectural change)
+        - Not sure
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contributing
+    attributes:
+      label: Would you be willing to contribute?
+      options:
+        - label: Yes, I can submit a PR if we agree on the approach
+        - label: I can help test once it's implemented
+        - label: I'm just suggesting, no implementation help

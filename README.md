@@ -1,8 +1,24 @@
 # TAKOTA – civTAK OTA Bundle Generator
 
+[![License: AGPL v3](https://img.shields.io/github/license/GUMMIIII/takserver_ota?color=blue)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/GUMMIIII/takserver_ota?label=release)](https://github.com/GUMMIIII/takserver_ota/releases)
+[![Last Commit](https://img.shields.io/github/last-commit/GUMMIIII/takserver_ota)](https://github.com/GUMMIIII/takserver_ota/commits/main)
+[![Issues](https://img.shields.io/github/issues/GUMMIIII/takserver_ota)](https://github.com/GUMMIIII/takserver_ota/issues)
+[![Stars](https://img.shields.io/github/stars/GUMMIIII/takserver_ota?style=social)](https://github.com/GUMMIIII/takserver_ota/stargazers)
+
 Automatically generate `product.inf` + `product.infz` from ATAK plugin APKs and serve them via your civTAK server for over-the-air (OTA) distribution to connected ATAK clients.
 
 > Last tested: May 2026 · TAKServer 5.x · ATAK 5.x
+
+---
+
+## A note from the maintainer
+
+Hey — this is a hobby tool I built to automate plugin packaging for my own civTAK deployment and decided to publish in case it helps others running similar setups. It works for me, but I'm one person: expect bugs, rough edges, and undocumented assumptions baked into the code.
+
+If you run into problems or have ideas, please open an [issue](https://github.com/GUMMIIII/takserver_ota/issues) — I read all of them and I'm genuinely happy to get feedback, both bug reports and suggestions.
+
+I'll try to respond within a few days. Bigger changes (new features, refactors) might take longer depending on how much free-time work they need, but they're not off the table.
 
 ---
 
@@ -31,3 +47,17 @@ bash setup.sh
 ```bash
 python takota_gui.py
 ```
+
+---
+
+## Companion: Full TAKServer + MDM Platform
+
+If you're looking for a complete self-hosted TAKServer deployment with OpenVPN, Matrix, Mumble, Nextcloud, Headwind MDM, and SSO baked in — check the companion repo **[GUMMIIII/TAKSERVER_MDM](https://github.com/GUMMIIII/TAKSERVER_MDM)**.
+
+TAKOTA plugs straight into the TAKServer set up there: the generated `product.infz` drops into `/opt/tak/webcontent/update/` and ATAK clients pull updates from the existing nginx reverse proxy without extra firewall holes.
+
+---
+
+## License
+
+[AGPL-3.0](LICENSE)

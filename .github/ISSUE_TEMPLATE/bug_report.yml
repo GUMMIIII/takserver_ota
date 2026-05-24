@@ -1,0 +1,78 @@
+name: Bug report
+description: Something is not working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Please fill in as much detail
+        as you can — it helps me reproduce and fix it faster.
+
+        For security issues, do not use this form. See
+        [SECURITY.md](https://github.com/GUMMIIII/takserver_ota/blob/main/SECURITY.md).
+
+  - type: input
+    id: version
+    attributes:
+      label: TAKOTA version / commit
+      description: Run `git -C <repo-dir> describe --tags --always`, or paste the release tag you downloaded.
+      placeholder: "e.g. v0.1.0 or commit hash"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      multiple: true
+      options:
+        - install_windows.ps1 (Windows installer)
+        - setup.sh (Linux installer)
+        - takota_gui.py (GUI itself)
+        - build_exe.bat (PyInstaller build)
+        - aapt detection / auto-install
+        - product.inf / product.infz generation
+        - APK metadata extraction
+        - ATAK / TAKServer integration
+        - Documentation (README / EN / DEU)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Launched takota_gui.py on Windows 11
+        2. Selected APK folder containing 5 plugins
+        3. Clicked Run, got error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output / logs
+      description: Output from the GUI log area, console output, or PowerShell error messages. Redact anything sensitive.
+      render: shell
+
+  - type: input
+    id: os
+    attributes:
+      label: OS / Python / aapt versions
+      placeholder: "e.g. Windows 11 23H2 · Python 3.12 · aapt 33.0.2"
+
+  - type: input
+    id: tak-versions
+    attributes:
+      label: TAKServer / ATAK version (if relevant)
+      placeholder: "e.g. TAKServer 5.7-RELEASE-32 · ATAK 5.2"

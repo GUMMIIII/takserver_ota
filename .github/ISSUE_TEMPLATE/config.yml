@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/GUMMIIII/takserver_ota/security/advisories/new
+    about: Please report security issues privately via GitHub Security Advisory — do not open a public issue.
+  - name: Full TAKServer + MDM platform
+    url: https://github.com/GUMMIIII/TAKSERVER_MDM
+    about: Looking for the complete TAKServer deployment that TAKOTA plugs into? See the companion repo.
