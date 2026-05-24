@@ -210,9 +210,16 @@ scp /pfad/zum/apk/ordner/* root@DEINE_SERVER_IP:/opt/komms-data/tak/webcontent/u
 
 **Berechtigungen:** Der TAKSERVER_MDM-Container läuft als `root`, daher ist kein `chown` nötig — hochgeladene Dateien sind für den TAKServer-Prozess sofort lesbar.
 
-**Prüfen:** URL `https://tak.DEINE_DOMAIN/update/product.infz` im Browser aufrufen — eine ZIP-Datei sollte heruntergeladen werden.
+**Prüfen:** URL `https://tak.DEINE_DOMAIN:8443/update/product.infz` im Browser aufrufen — eine ZIP-Datei sollte heruntergeladen werden (Browser warnt vor dem selbstsignierten Zertifikat — das ist erwartet, siehe unten).
 
-> nginx in TAKSERVER_MDM umgeht Authelia für den `/update/`-Pfad gezielt (seit v0.0.15), weil ATAK-Clients keine SSO-Cookie-Session haben. Das Manifest und die APKs sind per Design öffentliche Artefakte; die eigentliche Zugriffskontrolle auf CoT-Daten findet weiterhin am 8089-TLS-Input über pro-User-x509-Client-Zertifikate statt.
+**ATAK Update-Server-URL** (einmal pro ATAK-Client konfigurieren):
+```
+https://tak.DEINE_DOMAIN:8443/update
+```
+
+⚠️ **Port `:8443` benutzen, NICHT `:443`.** ATAK hat einen eigenen internen Trust-Store, der nur das `KOMMSca`-CA enthält (das TAKServer-eigene Self-Signed-CA, das in `user.p12` / `truststore-tak.p12` integriert ist). TAKSERVER_MDM's nginx auf Port `443` liefert ein Let's-Encrypt-Zertifikat aus, dem ATAK **nicht** vertraut — Verbindungen über nginx scheitern mit „socket is closed" beim TLS-Handshake. Port `8443` geht direkt zu TAKServer mit dessen KOMMSca-signiertem Zertifikat, dem jeder ATAK-Client out-of-the-box vertraut.
+
+Der `/update/`-Pfad ist über `https://tak.DEINE_DOMAIN/` (Port 443, via nginx) ebenfalls Authelia-bypassed und für `curl`/Browser-Tests erreichbar — ATAK selbst muss aber zwingend `:8443` verwenden.
 
 ---
 

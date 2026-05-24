@@ -54,14 +54,14 @@ python takota_gui.py
 
 If you're looking for a complete self-hosted TAKServer deployment with OpenVPN, Matrix, Mumble, Nextcloud, Headwind MDM, and SSO baked in — check the companion repo **[GUMMIIII/TAKSERVER_MDM](https://github.com/GUMMIIII/TAKSERVER_MDM)**.
 
-TAKOTA plugs straight into the TAKServer set up there. The path differs slightly because TAKSERVER_MDM bind-mounts `/opt/tak/` from the host:
+TAKOTA plugs straight into the TAKServer set up there. The host path differs because TAKSERVER_MDM bind-mounts `/opt/tak/` from the host, but the ATAK update URL works the same way as for a vanilla TAKServer:
 
 | Setup | Drop generated files into | ATAK pulls from |
 |---|---|---|
 | Vanilla TAKServer | `/opt/tak/webcontent/update/` | `https://SERVER:8443/update` |
-| TAKSERVER_MDM | `/opt/komms-data/tak/webcontent/update/` | `https://tak.DOMAIN/update` |
+| TAKSERVER_MDM | `/opt/komms-data/tak/webcontent/update/` | `https://tak.DOMAIN:8443/update` |
 
-TAKSERVER_MDM (v0.0.15+) ships an nginx bypass for `/update/` so ATAK can fetch the manifest without an SSO session. See the [TAKSERVER_MDM README](https://github.com/GUMMIIII/TAKSERVER_MDM#companion-atak-ota-updates) for details.
+**Always use port `:8443`** for the ATAK Update-Server URL — ATAK trusts only the TAKServer-internal `KOMMSca` CA, not Let's Encrypt. See the [TAKSERVER_MDM README](https://github.com/GUMMIIII/TAKSERVER_MDM#companion-atak-ota-updates) for the full background.
 
 ---
 

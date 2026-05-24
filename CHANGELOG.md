@@ -14,6 +14,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.1.2] – 2026-05-24
+
+### Documented
+
+- **ATAK Update-Server URL must use port `:8443`** in all three READMEs (`README.md`, `EN_README.md`, `DEU_README.md`) — both for the Vanilla-TAKServer variant and the TAKSERVER_MDM variant. Added an explicit warning explaining the reason: ATAK has its own internal trust-store containing only the TAKServer-internal `KOMMSca` CA (via `user.p12` / `truststore-tak.p12`), so it does not trust Let's Encrypt or any other public CA. Going through TAKSERVER_MDM's nginx on port 443 fails with "socket is closed" during the TLS handshake. The direct `:8443` connection presents a KOMMSca-signed cert that every ATAK client accepts.
+
+### Notes
+
+Documentation-only — no code changes. The TAKOTA tool itself works the same as in v0.1.1.
+
+---
+
 ## [0.1.1] – 2026-05-24
 
 ### Documented
